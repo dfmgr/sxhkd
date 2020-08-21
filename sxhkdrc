@@ -1,0 +1,307 @@
+# simple X hotkey daemon - this is set on all desktops
+
+########################################################################
+# super + shift +
+
+super + shift + Escape
+    killall "$DESKTOP_SESSION"
+
+########################################################################
+# Basic binds super +
+
+# Make sxhkd reload its configuration files
+super + Escape
+    pkill -USR1 -x sxhkd && cmd_exists notify-send && notify-send 'sxhkd' 'Reloaded config'
+
+# Open terminal
+super + Return
+    myterminal
+
+# Open dmenu
+super + d
+    dmenu_run
+
+super + period
+    emojis dmenu
+
+########################################################################
+# ctrl + shift +
+
+# Get help
+ctrl + shift + F1
+    mybrowser https://wiki.archlinux.org/index.php
+
+# sxhkd Bindings
+ctrl + shift + F2
+   sxhkd-help
+
+# Window Manager Key Bindings
+ctrl + shift + F3
+   $EDITOR "$DESKTOP_SESSION_CONFDIR/KeyBindings.md"
+
+# Open browser
+ctrl + shift + b
+    mybrowser
+
+# Open editor
+ctrl + shift + e
+    myeditor
+
+# Open htop
+ctrl + shift + h
+    myterminal -e htop;bash
+
+# Open VirtualMachine manager
+ctrl + shift + l
+    myterminal -e myvmmanager
+
+# Open email
+ctrl + shift + m
+    myemail
+
+# Open torrents
+ctrl + shift + t
+    mytorrent
+
+# Random wallpaper
+ctrl + w
+    randomwallpaper
+
+# Close window
+#ctrl + shift + x
+
+########################################################################
+
+# open rofi
+alt + f
+    rofi -config ~/.config/rofi/config -show combi
+
+# run catfish
+alt + o
+    catfish
+
+# Open file manager
+alt + r
+  myterminal -e vifm
+
+# Open email
+alt + e
+    myterminal -e neomutt
+
+# Open music
+alt + m
+    myterminal -e multimedia
+
+# Open rss feeds
+alt + n
+    myterminal -e newsboat
+
+# Open calc
+alt + 0
+    myterminal -e "calc --term"
+
+# Open vim
+alt + v
+    myterminal -e vim
+
+# Emoji list 😼
+alt + grave
+    emojis dmenu
+
+# Start/Stop screenkey
+alt + s
+    ss_screenkey
+
+# Show clipboard
+alt + Insert
+    showclip
+
+# Pick screenshot type
+alt + Print
+    scrot -d 5 'screenshot-%Y-%m-%d-%S.png' -e 'mv -f $f ~/Pictures/' && cmd_exists notify-send && notify-send "Scrot" "Screenshot has been saved to ~/Pictures" 
+
+# Pause audio
+alt + p
+    mpc toggle
+
+# Changes to next/previous tracks
+alt + {comma,period}
+    mpc {prev,next}
+
+alt + i
+    pgrep guake>/dev/null 2>&1 && guake-toggle || guake -u --change-palette=Dracula -f -e scratchpad
+
+alt + F1
+    sxhkd-help
+
+alt + F2 is unbound.
+
+alt + F3 is unbound.
+
+alt + f4 is unbound.
+
+alt + F5 is unbound.
+
+# Start torrent daemon/open interface
+alt + F6
+    torwrap
+
+# toggle torrent daemon
+alt + F7
+    td-toggle
+
+# sync email
+alt + F8
+    mailsync
+
+# update newsboat
+alt + F9
+    newsboat -x reload -X
+
+# Mount a USB drive or Android device
+alt + F10
+    dmenumount
+    
+# Unmount a USB drive or Android device
+alt + F11
+    dmenuumount
+
+alt + F12 is unbound.
+
+########################################################################
+# alt + shift +
+
+# ibus emoji
+alt + shift + e
+    ibus emoji
+
+########################################################################
+# alt + ctrl +
+
+# Open dmenu
+alt + ctrl + d
+    dmenu_run
+
+# Open terminal
+alt + ctrl + Return
+    myterminal
+
+# Open thunar
+alt + ctrl + f
+    thunar
+
+# Open terminal
+alt + ctrl + t
+    myterminal
+
+# Open browser
+alt + ctrl + w
+    mybrowser
+
+alt + ctrl + a
+    pavucontrol
+
+alt + ctrl + c
+    mpv --no-osc --no-input-default-bindings --input-conf=/dev/null --title='mpvfloat' /dev/video0
+
+alt + ctrl + e
+    myterminal -e multimedia
+
+alt + ctrl + p
+    mpc pause; pauseallmpv
+
+# Restart track
+alt + ctrl + less
+    mpc seek 0%
+
+# Seek foward in song
+alt + {_,ctrl +} bracketright
+    mpc seek +{10,120}
+
+# Seek backward in song
+alt + {_,ctrl +} bracketleft
+    mpc seek -{10,120}
+
+# Increase volume
+alt + {equal,plus}
+    amixer sset Master {5,15}%+
+
+# Decrease volume
+alt {_,ctrl +} + minus
+    amixer sset Master {5,15}%-
+
+# Volume toggle
+alt + ctrl + m
+    amixer sset Master toggle
+
+# Shutdown
+alt + ctrl + x
+    prompt "Shutdown computer?" "sudo -A shutdown -h now"
+
+# Reboot
+alt + ctrl + r
+    prompt "Reboot computer?" "sudo -A reboot"
+
+# Exit
+alt + ctrl + Escape
+    prompt "Leave Xorg?" "killall $DESKTOP_SESSION"
+
+########################################################################
+# other keys
+# Take screenshot
+Print
+    scrot 'screenshot-%Y-%m-%d-%S.png' -e 'mv -f $f ~/Pictures/' && cmd_exists notify-send && notify-send "Scrot" "Screenshot has been saved to ~/Pictures" 
+
+########################################################################
+# XF86 Keys
+
+XF86AudioRecord
+    dmenurecord
+
+XF86AudioMedia
+    myterminal -e multimedia
+
+XF86Audio{Next,Prev}
+    mpc {next,prev}
+
+XF86Audio{Pause,Play,Stop}
+    mpc {pause,play,stop}
+
+XF86Audio{Rewind,Forward}
+    mpc seek {-,+}10
+
+XF86Launch1
+    xset dpms force off
+
+XF86TouchpadToggle
+    (synclient | grep "TouchpadOff.*1" && synclient TouchpadOff=0) || synclient TouchpadOff=1
+
+XF86Touchpad{Off,On}
+    synclient TouchpadOff={1,0}
+
+XF86MonBrightnessDown
+    xbacklight -dec 1
+
+XF86MonBrightnessUp
+    xbacklight -inc 1
+
+XF86PowerOff
+    prompt "Shutdown computer?" "sudo -A shutdown -h now"
+
+XF86Calculator
+    myterminal -e calc
+
+XF86WWW
+    mybrowser
+
+XF86DOS
+    myterminal
+
+XF86TaskPane
+    myterminal -e htop;bash
+
+XF86Mail
+    myterminal -e neomutt
+
+XF86MyComputer
+    myterminal -e vifm
