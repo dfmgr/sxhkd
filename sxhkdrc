@@ -59,13 +59,13 @@ ctrl + shift + l
 ctrl + shift + m
     myemail
 
+# Random wallpaper
+ctrl + shift + r
+    randomwallpaper
+
 # Open torrents
 ctrl + shift + t
     mytorrent
-
-# Random wallpaper
-ctrl + w
-    randomwallpaper
 
 # Close window
 #ctrl + shift + x
