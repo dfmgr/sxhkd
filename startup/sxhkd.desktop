@@ -1,0 +1,11 @@
+[Desktop Entry]
+Encoding=UTF-8
+Type=Application
+Name=SXHKD
+Comment=Hotkey Daemon
+Exec=sxhkd -c ~/.config/sxhkd/sxhkdrc &>/dev/null &
+RunHook=0
+StartupNotify=false
+Terminal=false
+Hidden=false
+X-GNOME-Autostart-Delay=0
