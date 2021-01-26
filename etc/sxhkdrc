@@ -1,14 +1,11 @@
 # simple X hotkey daemon - this is set on all desktops
-
 ########################################################################
 # super + shift +
-
 super + shift + Escape
     killall "$DESKTOP_SESSION"
 
 ########################################################################
 # Basic binds super +
-
 # Make sxhkd reload its configuration files
 super + Escape
     pkill -USR1 -x sxhkd && cmd_exists notify-send && notify-send 'sxhkd' 'Reloaded config'
@@ -26,7 +23,6 @@ super + period
 
 ########################################################################
 # ctrl + shift +
-
 # Get help
 ctrl + shift + F1
     mybrowser https://wiki.archlinux.org/index.php
@@ -37,7 +33,7 @@ ctrl + shift + F2
 
 # Window Manager Key Bindings
 ctrl + shift + F3
-   $EDITOR "$DESKTOP_SESSION_CONFDIR/KeyBindings.md"
+   myeditor "$DESKTOP_SESSION_CONFDIR/KeyBindings.md"
 
 # Open browser
 ctrl + shift + b
@@ -49,7 +45,7 @@ ctrl + shift + e
 
 # Open htop
 ctrl + shift + h
-    myterminal -e htop;bash
+    myterminal -e "htop;bash"
 
 # Open VirtualMachine manager
 ctrl + shift + l
@@ -82,11 +78,11 @@ alt + o
 
 # Open file manager
 alt + r
-  myterminal -e vifm
+    myfilemanager
 
 # Open email
 alt + e
-    myterminal -e neomutt
+    myemail
 
 # Open music
 alt + m
@@ -94,7 +90,7 @@ alt + m
 
 # Open rss feeds
 alt + n
-    myterminal -e newsboat
+    myterminal -e "newsboat;bash"
 
 # Open calc
 alt + 0
@@ -118,7 +114,7 @@ alt + Insert
 
 # Pick screenshot type
 alt + Print
-    scrot -d 5 'screenshot-%Y-%m-%d-%S.png' -e 'mv -f $f ~/Pictures/' && cmd_exists notify-send && notify-send "Scrot" "Screenshot has been saved to ~/Pictures" 
+    scrot -d 5 'screenshot-%Y-%m-%d-%S.png' -e 'mv -f $f ~/Pictures/' && cmd_exists notify-send && notify-send "Scrot" "Screenshot has been saved to ~/Pictures"
 
 # Pause audio
 alt + p
@@ -161,7 +157,7 @@ alt + F9
 # Mount a USB drive or Android device
 alt + F10
     dmenumount
-    
+
 # Unmount a USB drive or Android device
 alt + F11
     dmenuumount
@@ -186,9 +182,9 @@ alt + ctrl + d
 alt + ctrl + Return
     myterminal
 
-# Open thunar
+# Open filemanager
 alt + ctrl + f
-    thunar
+    myfilemanager
 
 # Open terminal
 alt + ctrl + t
@@ -250,7 +246,8 @@ alt + ctrl + Escape
 # other keys
 # Take screenshot
 Print
-    scrot 'screenshot-%Y-%m-%d-%S.png' -e 'mv -f $f ~/Pictures/' && cmd_exists notify-send && notify-send "Scrot" "Screenshot has been saved to ~/Pictures" 
+    scrot 'screenshot-%Y-%m-%d-%S.png' -e 'mv -f $f ~/Pictures/' && cmd_exists notify-send && notify-send "Scrot"
+    "Screenshot has been saved to ~/Pictures/screenshot-%Y-%m-%d-%S.png"
 
 ########################################################################
 # XF86 Keys
@@ -289,7 +286,7 @@ XF86PowerOff
     prompt "Shutdown computer?" "sudo -A shutdown -h now"
 
 XF86Calculator
-    myterminal -e calc
+    myterminal -e "calc --term"
 
 XF86WWW
     mybrowser
@@ -298,10 +295,11 @@ XF86DOS
     myterminal
 
 XF86TaskPane
-    myterminal -e htop;bash
+    myterminal -e "htop;bash"
 
 XF86Mail
-    myterminal -e neomutt
+    myemail
 
 XF86MyComputer
-    myterminal -e vifm
+    myfilemanager
+
