@@ -17,5 +17,5 @@ status_fifo=$1
     duration=1
     ;;
   esac
-  notify-send -t $duration "$msg"
+  notifications $duration "$msg"
 done; } <"$status_fifo"
