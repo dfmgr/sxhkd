@@ -147,7 +147,7 @@ EOF
       ;;
     -r | --restart)
       shift 1
-      pkill -USR1 -x sxhkd && __notifications 'sxhkd' 'Reloaded the config'
+      pkill -USR1 -x sxhkd && notifications 'SXHKD' 'Reloaded the config'
       exit $?
       ;;
     --)
