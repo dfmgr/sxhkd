@@ -78,7 +78,11 @@ EOF
     fi
   }
   sxhkdcmd() {
-    sxhkd -c "$RUN_SXHKD_BIND_FILE" -s "$RUN_SXHKD_FIFO_FILE" || return 1
+    if pgrep sxhkd; then
+      return 0
+    else
+      sxhkd -c "$RUN_SXHKD_BIND_FILE" -s "$RUN_SXHKD_FIFO_FILE" || return 1
+    fi
   }
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   # Defaults
@@ -140,15 +144,19 @@ EOF
       ;;
     -s | --start)
       shift 1
-      sxhkdcmd &>/"$RUN_SXHKD_LOG_FILE" &
+      sxhkdcmd &>"$RUN_SXHKD_LOG_FILE" &
       disown
       sleep 5
       exit $?
       ;;
     -r | --restart)
       shift 1
-      pkill -USR1 -x sxhkd && notifications 'SXHKD' 'Reloaded the config'
+      pkill -USR1 -x sxhkd &>"$RUN_SXHKD_LOG_FILE" && notifications 'SXHKD' 'Reloaded the config'
       exit $?
+      ;;
+    -b | --bindings)
+      shift 1
+      SETOPTS="bindings"
       ;;
     --)
       shift 1
@@ -177,9 +185,9 @@ EOF
 
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   # begin main app
-  case "$1" in
+  case "${SETOPTS:-$1}" in
     bindings)
-      if cmd_exists rofi; then
+      if cmd_exists rofi1; then
         cmd_exists sxhkd-help && sxhkd-help
       elif [ -t 0 ]; then
         cat $HOME/.config/sxhkd/KeyBindings.md | grep " # " | less
