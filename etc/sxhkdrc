@@ -1,14 +1,13 @@
 # simple X hotkey daemon - this is set on all desktops
 ########################################################################
-# super + shift +
+# Kill running desktop
 super + shift + Escape
     killall "$DESKTOP_SESSION"
 
 ########################################################################
-# Basic binds super +
 # Make sxhkd reload its configuration files
 super + Escape
-    pkill -USR1 -x sxhkd && cmd_exists notify-send && notify-send 'sxhkd' 'Reloaded config'
+    pkill -USR1 -x sxhkd && cmd_exists notifications && notifications 'sxhkd' 'Reloaded config'
 
 # Open terminal
 super + Return
@@ -22,7 +21,6 @@ super + period
     emojis dmenu
 
 ########################################################################
-# ctrl + shift +
 # Get help
 ctrl + shift + F1
     mybrowser https://wiki.archlinux.org/index.php
@@ -33,7 +31,7 @@ ctrl + shift + F2
 
 # Window Manager Key Bindings
 ctrl + shift + F3
-   myeditor "$DESKTOP_SESSION_CONFDIR/KeyBindings.md"
+   myeditor "${DESKTOP_SESSION_CONFDIR:-$HOME/.config/sxhkd}/KeyBindings.md"
 
 # Open browser
 ctrl + shift + b
@@ -114,7 +112,8 @@ alt + Insert
 
 # Pick screenshot type
 alt + Print
-    scrot -d 5 'screenshot-%Y-%m-%d-%S.png' -e 'mv -f $f ~/Pictures/' && cmd_exists notify-send && notify-send "Scrot" "Screenshot has been saved to ~/Pictures"
+    scrot -d 5 'screenshot-%Y-%m-%d-%S.png' -e 'mv -f $f ~/Pictures/' && \
+    cmd_exists notifications && notifications "Scrot" "Screenshot has been saved to ~/Pictures"
 
 # Pause audio
 alt + p
@@ -232,22 +231,22 @@ alt + ctrl + m
 
 # Shutdown
 alt + ctrl + x
-    prompt "Shutdown computer?" "sudo -A shutdown -h now"
+    ask_yes_no_question "Shutdown computer?" "sudo -A shutdown -h now"
 
 # Reboot
 alt + ctrl + r
-    prompt "Reboot computer?" "sudo -A reboot"
+    ask_yes_no_question "Reboot computer?" "sudo -A reboot"
 
 # Exit
 alt + ctrl + Escape
-    prompt "Leave Xorg?" "killall $DESKTOP_SESSION"
+    ask_yes_no_question "Leave Xorg?" "killall $DESKTOP_SESSION"
 
 ########################################################################
 # other keys
 # Take screenshot
 Print
-    scrot 'screenshot-%Y-%m-%d-%S.png' -e 'mv -f $f ~/Pictures/' && cmd_exists notify-send && notify-send "Scrot"
-    "Screenshot has been saved to ~/Pictures/screenshot-%Y-%m-%d-%S.png"
+    scrot 'screenshot-%Y-%m-%d-%S.png' -e 'mv -f $f ~/Pictures/' && cmd_exists notifications && \
+    notifications "Scrot" "Screenshot has been saved to ~/Pictures/screenshot-%Y-%m-%d-%S.png"
 
 ########################################################################
 # XF86 Keys

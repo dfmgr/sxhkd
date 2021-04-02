@@ -7,7 +7,7 @@ super + Return                   # Open terminal
 super + d                        # Open dmenu  
 super + period                   # Emoji list 😼  
 ctrl + F1                        # Get help  
-ctrl + r ; c ; b                 # Random wallpaper
+ctrl + r                         # Random wallpaper
 alt + f                          # open rofi  
 alt + o                          # run catfish  
 alt + r                          # Open file manager  

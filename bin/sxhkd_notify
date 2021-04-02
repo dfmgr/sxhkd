@@ -54,8 +54,9 @@ main() {
   cmd_exists --error bash || exit 1
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   # begin main app
-  [ $# -ne 1 ] && return 1
-  status_fifo=$1
+  pkill -USR1 -x sxhkd && cmd_exists notifications && notifications 'sxhkd' 'Reloaded config'
+  status_fifo="${1:-$HOME/.cache/sxhkd}"
+  [ -p "$status_fifo" ] || mkfifo "$status_fifo" &>/dev/null
   { while read -r line; do
     msg=${line#?}
     case $line in
@@ -63,7 +64,7 @@ main() {
       C*) duration=4 ;;
       T*) duration=1 ;;
     esac
-    notifications $duration "$msg"
+    notifications 'SXHKD' "$duration $msg"
     done; } <"$status_fifo"
   return "${exitCode:-$?}"
 }
