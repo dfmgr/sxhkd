@@ -36,7 +36,7 @@ fi
 # helper function
 __version() { app_version; }
 __help() {
-  app_help "Usage: sxhkd_notify  -  sxhkd_notify --version"  \
+  app_help "Usage: sxhkd_notify  -  sxhkd_notify --version" \
     "-v, --version          -  display version" \
     "-h, --help             -  display help"
 }
@@ -46,12 +46,12 @@ main() {
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   # options
   case $1 in
-    -v | --version) __version ;;
-    -h | --help) __help ;;
+  -v | --version) __version ;;
+  -h | --help) __help ;;
   esac
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   # Required app check
-  cmd_exists --error bash || exit 1
+  cmd_exists --error bash sxhkd || exit 1
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   # begin main app
   pkill -USR1 -x sxhkd && cmd_exists notifications && notifications 'sxhkd' 'Reloaded config'
@@ -60,12 +60,12 @@ main() {
   { while read -r line; do
     msg=${line#?}
     case $line in
-      H*) duration=2 ;;
-      C*) duration=4 ;;
-      T*) duration=1 ;;
+    H*) duration=2 ;;
+    C*) duration=4 ;;
+    T*) duration=1 ;;
     esac
     notifications 'SXHKD' "$duration $msg"
-    done; } <"$status_fifo"
+  done; } <"$status_fifo"
   return "${exitCode:-$?}"
 }
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -75,4 +75,3 @@ main "$@"
 exit $?
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # end
-

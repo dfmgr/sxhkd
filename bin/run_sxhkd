@@ -195,7 +195,7 @@ EOF
   fi
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   # Check for required applications/Network check
-  cmd_exists --error bash || exit 1
+  cmd_exists --error bash sxhkd || exit 1
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   # APP Variables
 
