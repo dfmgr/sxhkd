@@ -8,7 +8,7 @@ run_sxhkd_main() {
   SRC_DIR="${BASH_SOURCE%/*}"
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   #set opts
-  trap '[ -f "$RUN_SXHKD_TMP_FILE" ] && rm -Rf "$RUN_SXHKD_TMP_FILE" &>/dev/null' EXIT
+  trap '[ -f "$RUN_SXHKD_TEMP_FILE" ] && rm -Rf "$RUN_SXHKD_TEMP_FILE" &>/dev/null' EXIT
 
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   ##@Version       : 202104020437-git
@@ -42,7 +42,7 @@ run_sxhkd_main() {
   __help() {
     app_help "4" "Usage: run_sxhkd  " \
       "*                      -  start sxhkd"
-      "bindngs                -  show keybindings" \
+    "bindngs                -  show keybindings" \
       "-s, --start            -  start sxhkd" \
       "-r, --restart          -  restart sxhkd" \
       "-c, --config           -  create config file" \
@@ -115,6 +115,10 @@ EOF
   if [ -f "$RUN_SXHKD_CONFIG_DIR/$RUN_SXHKD_CONFIG_FILE" ]; then
     . "$RUN_SXHKD_CONFIG_DIR/$RUN_SXHKD_CONFIG_FILE"
   fi
+
+  if [ ! -p "$RUN_SXHKD_FIFO_FILE" ]; then
+    mkfifo "$RUN_SXHKD_FIFO_FILE" &>/dev/null
+  fi
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   # options
   local setopts=$(getopt -o "$SHORTOPTS" --long "$LONGOPTS" -a -n "$PROG" -- "$@" 2>/dev/null)
@@ -186,18 +190,18 @@ EOF
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   # begin main app
   case "${SETOPTS:-$1}" in
-    bindings)
-      if cmd_exists rofi1; then
-        cmd_exists sxhkd-help && sxhkd-help
-      elif [ -t 0 ]; then
-        cat $HOME/.config/sxhkd/KeyBindings.md | grep " # " | less
-      else
-        myterminal -e 'bash -c "cat $HOME/.config/sxhkd/KeyBindings.md | less"'
-      fi
-      ;;
-    *)
-      sxhkdcmd
-      ;;
+  bindings)
+    if cmd_exists rofi1; then
+      cmd_exists sxhkd-help && sxhkd-help
+    elif [ -t 0 ]; then
+      grep " # " "$HOME/.config/sxhkd/KeyBindings.md" | less
+    else
+      myterminal -e "less $HOME/.config/sxhkd/KeyBindings.md"
+    fi
+    ;;
+  *)
+    sxhkdcmd
+    ;;
   esac
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   # lets exit with code
