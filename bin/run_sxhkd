@@ -41,10 +41,11 @@ run_sxhkd_main() {
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   __help() {
     app_help "4" "Usage: run_sxhkd  " \
-      "*                      -  start sxhkd"
-    "bindngs                -  show keybindings" \
+      "*                      -  start sxhkd" \
+      "bindings               -  show keybindings" \
       "-s, --start            -  start sxhkd" \
       "-r, --restart          -  restart sxhkd" \
+      "-k, --kill             -  stop sxhkd" \
       "-c, --config           -  create config file" \
       "-v, --version          -  display version" \
       "-h, --help             -  display help" \
@@ -61,7 +62,7 @@ run_sxhkd_main() {
       cp -Rf "$RUN_SXHKD_CONFIG_DIR/$RUN_SXHKD_CONFIG_FILE" "$RUN_SXHKD_CONFIG_BACKUP_DIR/$RUN_SXHKD_CONFIG_FILE.$$"
     cat <<EOF >"$RUN_SXHKD_CONFIG_DIR/$RUN_SXHKD_CONFIG_FILE"
 # Settings for run_sxhkd
-RUN_SXHKD_LOG_FILE="${LOGDIR:-$HOME/.local/log/run/sxhkd}"
+RUN_SXHKD_LOG_FILE="${LOGDIR:-$HOME/.local/log}/run/sxhkd"
 RUN_SXHKD_BIND_FILE="$HOME/.config/sxhkd/sxhkdrc"
 RUN_SXHKD_FIFO_FILE="$HOME/.cache/sxhkd"
 RUN_SXHKD_NOTIFY_ENABLED="yes"
@@ -75,6 +76,11 @@ EOF
     else
       printf_red "Failed to create the config file"
       false
+    fi
+  }
+  sxhkd_kill() {
+    if pgrep sxhkd; then
+      kill $(ps -ux | grep sxhkd | grep '\--start' | grep -v 'grep ' | awk '{print $2}')
     fi
   }
   sxhkdcmd() {
@@ -97,12 +103,13 @@ EOF
   local RUN_SXHKD_NOTIFY_CLIENT_ICON="${NOTIFY_CLIENT_ICON:-$RUN_SXHKD_NOTIFY_CLIENT_ICON}"
   local RUN_SXHKD_BIND_FILE="${RUN_SXHKD_BIND_FILE:-$HOME/.config/sxhkd/sxhkdrc}"
   local RUN_SXHKD_FIFO_FILE="${RUN_SXHKD_FIFO_FILE:-$HOME/.cache/sxhkd}"
-  local RUN_SXHKD_LOG_FILE="${LOGDIR:-$HOME/.local/log/run/sxhkd}"
+  local RUN_SXHKD_LOG_FILE="${LOGDIR:-$HOME/.local/log}/run/sxhkd"
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   # Argument/Option settings
+  local setopts=""
   local SETARGS="${*}"
-  local SHORTOPTS="c,v,h,s,r"
-  local LONGOPTS="options,config,version,help,start,restart"
+  local SHORTOPTS="c,v,h,s,r,k"
+  local LONGOPTS="options,config,version,help,start,restart,kill"
   local ARRAY="bindings"
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   # Generate Files
@@ -149,13 +156,16 @@ EOF
     -s | --start)
       shift 1
       sxhkdcmd &>"$RUN_SXHKD_LOG_FILE" &
-      disown
       sleep 5
       exit $?
       ;;
     -r | --restart)
       shift 1
       pkill -USR1 -x sxhkd &>"$RUN_SXHKD_LOG_FILE" && notifications 'SXHKD' 'Reloaded the config'
+      exit $?
+      ;;
+    -k | --kill)
+      sxhkd_kill
       exit $?
       ;;
     -b | --bindings)
