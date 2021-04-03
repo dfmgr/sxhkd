@@ -64,8 +64,8 @@ _run_sxhkd() {
         #[ $COMP_CWORD -eq 3 ] && \
         COMPREPLY=($(compgen -W '${ARRAY}' -- "${cur}"))
       elif [[ -n "$OPTS" ]]; then
-        #[ $COMP_CWORD -gt 3 ] && \
-        COMPREPLY=($(compgen -W '${OPTS}' -- "${cur}"))
+        [ $COMP_CWORD -gt 3 ] &&
+          COMPREPLY=($(compgen -W '${OPTS}' -- "${cur}"))
       fi
       ;;
     esac
