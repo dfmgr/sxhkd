@@ -61,11 +61,12 @@ _run_sxhkd() {
       elif [[ "$ARRAY" = "show-commands" ]]; then
         COMPREPLY=($(compgen -c -- "${cur}"))
       elif [[ -n "$ARRAY" ]]; then
-        #[ $COMP_CWORD -eq 3 ] && \
-        COMPREPLY=($(compgen -W '${ARRAY}' -- "${cur}"))
+        [ $COMP_CWORD -lt 2 ] &&
+          COMPREPLY=($(compgen -W '${ARRAY}' -- "${cur}")) ||
+          COMPREPLY=($(compgen -W '' -- "${cur}"))
       elif [[ -n "$OPTS" ]]; then
-        [ $COMP_CWORD -gt 3 ] &&
-          COMPREPLY=($(compgen -W '${OPTS}' -- "${cur}"))
+        #[ $COMP_CWORD -gt 3 ] && \
+        COMPREPLY=($(compgen -W '${OPTS}' -- "${cur}"))
       fi
       ;;
     esac
