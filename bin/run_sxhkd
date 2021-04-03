@@ -79,9 +79,11 @@ EOF
     fi
   }
   sxhkd_kill() {
-    if pgrep sxhkd; then
-      kill $(ps -ux | grep sxhkd | grep '\--start' | grep -v 'grep ' | awk '{print $2}')
+    pid="$(ps -ux | grep sxhkd | grep '\--start' | grep -v 'grep ' | awk '{print $2}')"
+    if [ -n "$pid" ]; then
+      kill "$pid"
     fi
+    return $?
   }
   sxhkdcmd() {
     if pgrep sxhkd; then
