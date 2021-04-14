@@ -171,6 +171,20 @@ alt + shift + e
     ibus emoji
 
 ########################################################################
+# alt + shift  + ctrl
+
+# logout menu
+alt + shift + ctrl + l
+   logout-menu
+
+# seach menu
+alt + shift + ctrl + s
+   search-menu
+
+# screenshot menu
+alt + shift + ctrl + Print
+   screenshot-menu
+########################################################################
 # alt + ctrl +
 
 # Open dmenu
