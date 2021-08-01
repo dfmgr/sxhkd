@@ -5,7 +5,7 @@ simple X hotkey daemon, by the developer of bspwm, that reacts to input events b
 Automatic install/update:
 
 ```shell
-bash -c "$(curl -LSs https://github.com/dfmgr/sxhkd/raw/master/install.sh)"
+bash -c "$(curl -LSs https://github.com/dfmgr/sxhkd/raw/main/install.sh)"
 ```
 
 Manual install:
