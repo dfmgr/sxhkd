@@ -155,20 +155,20 @@ alt + F9
 
 # Mount a USB drive or Android device
 alt + F10
-    dmenumount
+    dmenu-usb mount
 
 # Unmount a USB drive or Android device
 alt + F11
-    dmenuumount
+    dmenu-usb unmount
 
 alt + F12 is unbound.
 
 ########################################################################
 # alt + shift +
 
-# ibus emoji
+# emojis
 alt + shift + e
-    ibus emoji
+    emojis dmenu
 
 ########################################################################
 # alt + shift  + ctrl
@@ -299,7 +299,7 @@ XF86PowerOff
     prompt "Shutdown computer?" "sudo -A shutdown -h now"
 
 XF86Calculator
-    myterminal -e "calc --term"
+    myterminal -e calc
 
 XF86WWW
     mybrowser
@@ -315,4 +315,3 @@ XF86Mail
 
 XF86MyComputer
     myfilemanager
-
