@@ -24,20 +24,12 @@ _run_sxhkd() {
   local OPTSDIR="$HOME/.local/share/misc/run_sxhkd/options"
   local SEARCHDIR="${CONFDIR:-$HOME/.config/misc/settings/run_sxhkd}"
   #local SEARCHCMD="$(___findcmd "$SEARCHDIR/" "d" "1")"
-  local DEFAULTARRAY="$([ -f "$OPTSDIR/array" ] && grep -sEv '#|^$' "$OPTSDIR/array" || echo '--options --help --version')"
-  local DEFAULTOPTS="$([ -f "$OPTSDIR/options" ] && grep -sEv '#|^$' "$OPTSDIR/options" || echo '--options --help --version')"
-  local LONGOPTS="$(grep -sEv '#|^$' "$OPTSDIR/long_opts" || echo "$DEFAULTOPTS" | tr ' ' '\n' | grep '\--')"
-  local SHORTOPTS="$(grep -sEv '#|^$' "$OPTSDIR/short_opts" || echo "$DEFAULTOPTS" | tr ' ' '\n' | grep -v '\--')"
-  local OPTS="$DEFAULTOPTS"
-  local ARRAY="$DEFAULTARRAY"
-  local SHOW_COMP_OPTS=""
-  local FILEDIR=""
+  local LONGOPTS="--options --config --version --help --start --restart --kill"
+  local SHORTOPTS="-c -v -h -s -r -k"
+  local ARRAY="options config version help start restart kill"
 
   _init_completion || return
-  if [ "$SHOW_COMP_OPTS" != "" ]; then
-    local SHOW_COMP_OPTS_SEP="$(echo "$SHOW_COMP_OPTS" | tr ',' ' ')"
-    compopt -o $SHOW_COMP_OPTS_SEP
-  fi
+
   if [[ ${cur} == --* ]]; then
     COMPREPLY=($(compgen -W '${LONGOPTS}' -- ${cur}))
   elif [[ ${cur} == -* ]]; then
@@ -64,9 +56,6 @@ _run_sxhkd() {
         [ $COMP_CWORD -lt 2 ] &&
           COMPREPLY=($(compgen -W '${ARRAY}' -- "${cur}")) ||
           COMPREPLY=($(compgen -W '' -- "${cur}"))
-      elif [[ -n "$OPTS" ]]; then
-        #[ $COMP_CWORD -gt 3 ] && \
-        COMPREPLY=($(compgen -W '${OPTS}' -- "${cur}"))
       fi
       ;;
     esac
