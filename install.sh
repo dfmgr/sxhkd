@@ -140,7 +140,7 @@ if am_i_online; then
     fi
   fi
   # exit on fail
-  failexitcode $? "Git has failed"
+  failexitcode $? "Failed to download Plugin repo"
 fi
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # run post install scripts
