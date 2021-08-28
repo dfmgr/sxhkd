@@ -78,10 +78,13 @@ EOF
       false
     fi
   }
+  
+  get_pid() { pid="$(ps -ux | grep [s]xhkd | grep '\--start' | grep -v 'grep ' | awk '{print $2}')" | grep '^' || return 1; }
   sxhkd_kill() {
-    pid="$(ps -ux | grep sxhkd | grep '\--start' | grep -v 'grep ' | awk '{print $2}')"
+    pid="$(get_pid)"
     if [ -n "$pid" ]; then
-      kill "$pid"
+      kill -9 "$pid" &>/dev/null
+      get_pid &>/dev/null && true || false
     fi
     return $?
   }
@@ -89,7 +92,7 @@ EOF
     if pgrep sxhkd; then
       return 0
     else
-      sxhkd -c "$RUN_SXHKD_BIND_FILE" -s "$RUN_SXHKD_FIFO_FILE" || return 1
+      sxhkd -c "$RUN_SXHKD_BIND_FILE" -s "$RUN_SXHKD_FIFO_FILE" &>/dev/null & || return 1
     fi
   }
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
