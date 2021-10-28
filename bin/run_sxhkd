@@ -80,22 +80,27 @@ EOF
   }
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   __get_sxhkd_pid() {
-    ps -ux | grep [s]xhkd | awk '{print $2}' | head -n1 | grep '^'
+    pgrep sxhkd | head -n1 | grep '^'
     return $?
   }
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   sxhkd_kill() {
-    pid="$(__get_sxhkd_pid)"
-    if [ -n "$pid" ]; then
+    local pid="$(__get_sxhkd_pid)"
+    if [[ -n "$pid" ]] &>/dev/null; then
       kill -9 "$pid" &>/dev/null
-      __get_sxhkd_pid &>/dev/null && exitCode=1 || exitCode=0
+    fi
+    if __get_sxhkd_pid &>/dev/null; then
+      exitCode=1
+    else
+      exitCode=0
     fi
     return ${exitCode:-$?}
   }
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   sxhkdcmd() {
     if pgrep [s]xhkd &>/dev/null; then
-      exitCode=0
+      printf_red 'sxhkd is already running'
+      exitCode=1
     else
       sxhkd -c "$RUN_SXHKD_BIND_FILE" -s "$RUN_SXHKD_FIFO_FILE" "$@" &>>"$RUN_SXHKD_LOG_FILE" &
       exitCode=$?
