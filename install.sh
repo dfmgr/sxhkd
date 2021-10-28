@@ -146,7 +146,7 @@ fi
 # run post install scripts
 run_postinst() {
   dfmgr_run_post
-  if pidof sxhkd >/dev/null 2>&1; then
+  if pgrep sxhkd &>/dev/null; then
     pkill -USR1 -x sxhkd && cmd_exists notifications && notifications "sxhkd" "Reloaded config"
   fi
 }
