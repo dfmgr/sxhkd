@@ -79,11 +79,6 @@ EOF
     fi
   }
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-  create_fifo() {
-    sxhkd -c "$RUN_SXHKD_BIND_FILE" -s "$RUN_SXHKD_FIFO_FILE" &>/dev/null &
-    [[ $? = 0 ]] && return 0 || return 1
-  }
-  # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   get_pid() {
     pid="$(ps -ux | grep [s]xhkd | grep '\--start' | grep -v 'grep ' | awk '{print $2}' | grep '^' || return 1)"
   }
@@ -98,8 +93,11 @@ EOF
   }
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   sxhkdcmd() {
-    if ! pgrep sxhkd; then
-      create_fifo && return 0 || return 1
+    if ps -ux | grep -q [s]xhkd; then
+      return 0
+    else
+      sxhkd -c "$RUN_SXHKD_BIND_FILE" -s "$RUN_SXHKD_FIFO_FILE" &>/dev/null &
+      [[ $? = 0 ]] && return 0 || return 1
     fi
   }
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
