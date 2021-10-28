@@ -78,8 +78,16 @@ EOF
       false
     fi
   }
-  
-  get_pid() { pid="$(ps -ux | grep [s]xhkd | grep '\--start' | grep -v 'grep ' | awk '{print $2}')" | grep '^' || return 1; }
+  # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+  create_fifo() {
+    sxhkd -c "$RUN_SXHKD_BIND_FILE" -s "$RUN_SXHKD_FIFO_FILE" &>/dev/null &
+    [[ $? = 0 ]] && return 0 || return 1
+  }
+  # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+  get_pid() {
+    pid="$(ps -ux | grep [s]xhkd | grep '\--start' | grep -v 'grep ' | awk '{print $2}' | grep '^' || return 1)"
+  }
+  # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   sxhkd_kill() {
     pid="$(get_pid)"
     if [ -n "$pid" ]; then
@@ -88,11 +96,10 @@ EOF
     fi
     return $?
   }
+  # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   sxhkdcmd() {
-    if pgrep sxhkd; then
-      return 0
-    else
-      sxhkd -c "$RUN_SXHKD_BIND_FILE" -s "$RUN_SXHKD_FIFO_FILE" &>/dev/null & || return 1
+    if ! pgrep sxhkd; then
+      create_fifo && return 0 || return 1
     fi
   }
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -206,7 +213,7 @@ EOF
   # begin main app
   case "${SETOPTS:-$1}" in
   bindings)
-    if cmd_exists rofi1; then
+    if cmd_exists rofi; then
       cmd_exists sxhkd-help && sxhkd-help
     elif [ -t 0 ]; then
       grep " # " "$HOME/.config/sxhkd/KeyBindings.md" | less
