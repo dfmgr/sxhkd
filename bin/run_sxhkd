@@ -79,17 +79,18 @@ EOF
     fi
   }
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-  get_pid() {
-    pid="$(ps -ux | grep [s]xhkd | grep '\--start' | grep -v 'grep ' | awk '{print $2}' | grep '^' || return 1)"
+  __get_sxhkd_pid() {
+    ps -ux | grep [s]xhkd | awk '{print $2}' | head -n1 | grep '^'
+    return $?
   }
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   sxhkd_kill() {
-    pid="$(get_pid)"
+    pid="$(__get_sxhkd_pid)"
     if [ -n "$pid" ]; then
       kill -9 "$pid" &>/dev/null
-      get_pid &>/dev/null && true || false
+      __get_sxhkd_pid &>/dev/null && exitCode=1 || exitCode=0
     fi
-    return $?
+    return ${exitCode:-$?}
   }
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   sxhkdcmd() {
@@ -170,7 +171,7 @@ EOF
       ;;
     -r | --restart)
       shift 1
-      pkill -USR1 -x sxhkd &>"$RUN_SXHKD_LOG_FILE" && notifications 'SXHKD' 'Reloaded the config'
+      pkill -USR1 -x sxhkd &>>"$RUN_SXHKD_LOG_FILE" && notifications 'SXHKD' 'Reloaded the config'
       exit $?
       ;;
     -k | --kill)
