@@ -62,7 +62,7 @@ run_sxhkd_main() {
       cp -Rf "$RUN_SXHKD_CONFIG_DIR/$RUN_SXHKD_CONFIG_FILE" "$RUN_SXHKD_CONFIG_BACKUP_DIR/$RUN_SXHKD_CONFIG_FILE.$$"
     cat <<EOF >"$RUN_SXHKD_CONFIG_DIR/$RUN_SXHKD_CONFIG_FILE"
 # Settings for run_sxhkd
-RUN_SXHKD_LOG_FILE="${LOGDIR:-$HOME/.local/log}/run/sxhkd"
+RUN_SXHKD_LOG_FILE="${LOGDIR:-$HOME/.local/log}/sxhkd/run.log"
 RUN_SXHKD_BIND_FILE="$HOME/.config/sxhkd/sxhkdrc"
 RUN_SXHKD_FIFO_FILE="$HOME/.cache/sxhkd"
 RUN_SXHKD_NOTIFY_ENABLED="yes"
@@ -93,12 +93,13 @@ EOF
   }
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   sxhkdcmd() {
-    if ps -ux | grep -q [s]xhkd; then
-      return 0
+    if pgrep [s]xhkd &>/dev/null; then
+      exitCode=0
     else
-      sxhkd -c "$RUN_SXHKD_BIND_FILE" -s "$RUN_SXHKD_FIFO_FILE" &>/dev/null &
-      [[ $? = 0 ]] && return 0 || return 1
+      sxhkd -c "$RUN_SXHKD_BIND_FILE" -s "$RUN_SXHKD_FIFO_FILE" "$@" &>>"$RUN_SXHKD_LOG_FILE" &
+      exitCode=$?
     fi
+    return $exitCode
   }
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   # Defaults
@@ -113,7 +114,7 @@ EOF
   local RUN_SXHKD_NOTIFY_CLIENT_ICON="${NOTIFY_CLIENT_ICON:-$RUN_SXHKD_NOTIFY_CLIENT_ICON}"
   local RUN_SXHKD_BIND_FILE="${RUN_SXHKD_BIND_FILE:-$HOME/.config/sxhkd/sxhkdrc}"
   local RUN_SXHKD_FIFO_FILE="${RUN_SXHKD_FIFO_FILE:-$HOME/.cache/sxhkd}"
-  local RUN_SXHKD_LOG_FILE="${LOGDIR:-$HOME/.local/log}/run/sxhkd"
+  local RUN_SXHKD_LOG_FILE="${LOGDIR:-$HOME/.local/log}/sxhkd/run.log"
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   # Argument/Option settings
   local setopts=""
@@ -165,9 +166,7 @@ EOF
       ;;
     -s | --start)
       shift 1
-      sxhkdcmd &>"$RUN_SXHKD_LOG_FILE" &
-      sleep 5
-      exit $?
+      SETOPTS="start"
       ;;
     -r | --restart)
       shift 1
@@ -186,7 +185,6 @@ EOF
       shift 1
       break
       ;;
-      #*) break ;;
     esac
   done
   #set -- "$SETARGS"
@@ -220,7 +218,7 @@ EOF
     fi
     ;;
   *)
-    sxhkdcmd
+    sxhkdcmd "$@"
     ;;
   esac
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
