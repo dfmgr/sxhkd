@@ -213,7 +213,7 @@ EOF
   # begin main app
   case "${SETOPTS:-$1}" in
   bindings)
-    if cmd_exists rofi; then
+    if [[ -n "$DISPLAY" ]] && [[ "$(uname -s)" = "Linux" ]] && cmd_exists rofi; then
       cmd_exists sxhkd-help && sxhkd-help
     elif [ -t 0 ]; then
       grep " # " "$HOME/.config/sxhkd/KeyBindings.md" | less
