@@ -81,7 +81,7 @@ EOF
   }
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   __get_sxhkd_pid() {
-    ps -ux | grep [s]xhkdrc | head -n1 | grep '^' && true || false
+    ps -ux | grep [s]xhkdrc | head -n1 | awk '{print $2}' | grep '^' && true || false
     return $?
   }
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -181,12 +181,11 @@ EOF
       ;;
     -r | --restart)
       shift 1
-      pkill -USR1 -x sxhkd &>>"$RUN_SXHKD_LOG_FILE" && __notifications 'SXHKD' 'Reloaded the config'
-      exit $?
+      SETOPTS="restart"
       ;;
     -k | --kill)
-      sxhkd_kill
-      exit $?
+      shift 1
+      SETOPTS="kill"
       ;;
     -b | --bindings)
       shift 1
@@ -228,6 +227,22 @@ EOF
       myterminal -e "less $HOME/.config/sxhkd/KeyBindings.md"
     fi
     ;;
+
+  restart)
+    shift 1
+    pkill -USR1 -x sxhkd &>>"$RUN_SXHKD_LOG_FILE" && __notifications 'SXHKD' 'Reloaded the config'
+    ;;
+
+  start)
+    shift 1
+    sxhkdcmd
+    ;;
+
+  kill)
+    shift 1
+    sxhkd_kill
+    ;;
+
   *)
     sxhkdcmd
     ;;
