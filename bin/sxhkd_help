@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-PROG="sxhkd-help"
+PROG="sxhkd_help"
 USER="${SUDO_USER:-${USER}}"
 HOME="${USER_HOME:-${HOME}}"
 SRC_DIR="${BASH_SOURCE%/*}"
@@ -12,10 +12,10 @@ SRC_DIR="${BASH_SOURCE%/*}"
 # @Author        : Jason Hempstead
 # @Contact       : jason@casjaysdev.com
 # @License       : WTFPL
-# @ReadME        : sxhkd-help --help
+# @ReadME        : sxhkd_help --help
 # @Copyright     : Copyright: (c) 2021 Jason Hempstead, CasjaysDev
 # @Created       : Monday, Mar 15, 2021 17:03 EDT
-# @File          : sxhkd-help
+# @File          : sxhkd_help
 # @Description   : Show keybindings for sxhkd
 # @TODO          :
 # @Other         :
@@ -36,7 +36,7 @@ fi
 # helper function
 __version() { app_version; }
 __help() {
-  app_help "Usage: sxhkd-help  -  sxhkd-help --version"  \
+  app_help "Usage: sxhkd_help  -  sxhkd_help --version" \
     "-v, --version          -  display version" \
     "-h, --help             -  display help"
 }
@@ -46,8 +46,8 @@ main() {
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   # options
   case $1 in
-    -v | --version) __version ;;
-    -h | --help) __help ;;
+  -v | --version) __version ;;
+  -h | --help) __help ;;
   esac
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   # Required app check
@@ -55,7 +55,7 @@ main() {
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   local sxhkd_conf_file="$HOME/.config/sxhkd/sxhkdrc"
   # begin main app
-  awk '/^[a-z]/ && last {print "<small>",$0,"\t",last,"</small>"} {last=""} /^#/{last=$0}' "$sxhkd_conf_file" | \
+  awk '/^[a-z]/ && last {print "<small>",$0,"\t",last,"</small>"} {last=""} /^#/{last=$0}' "$sxhkd_conf_file" |
     column -t -s $'\t' | rofi -dmenu -i -markup-rows -width 1000 -lines 20 #-yoffset 40
 
   return "${exitCode:-$?}"
@@ -67,4 +67,3 @@ main "$@"
 exit $?
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # end
-

@@ -27,7 +27,7 @@ ctrl + shift + F1
 
 # sxhkd Bindings
 ctrl + shift + F2
-   sxhkd-help
+   sxhkd_help
 
 # Window Manager Key Bindings
 ctrl + shift + F3
@@ -127,7 +127,7 @@ alt + i
     pgrep guake>/dev/null 2>&1 && guake-toggle || guake -u --change-palette=Dracula -f -e scratchpad
 
 alt + F1
-    sxhkd-help
+    sxhkd_help
 
 alt + F2 is unbound.
 
