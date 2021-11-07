@@ -1,7 +1,8 @@
 #!/usr/bin/env xdg-open
 
 [Desktop Entry]
-Version=1.0
+Version=0.9.4
+Encoding=UTF-8
 Type=Application
 Name=sxhkd help
 GenericName=sxhkd help
@@ -9,7 +10,6 @@ Comment=Show sxhkd bindings.
 Icon=system
 Exec=sxhkd_help
 Terminal=false
-Actions=
 Categories=System;GTK;X-XFCE;GNOME;MyScripts;
 Keywords=sxhkd;help;
 StartupNotify=false

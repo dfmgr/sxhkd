@@ -8,8 +8,6 @@ Name=SXHKD
 Icon=preferences-desktop-notification
 Comment=Simple X HotKey Daemon
 Exec=run_sxhkd --start
-RunHook=0
 StartupNotify=false
 Terminal=false
 Hidden=false
-
