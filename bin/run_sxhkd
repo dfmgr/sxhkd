@@ -100,10 +100,12 @@ EOF
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   sxhkdcmd() {
     if pgrep [s]xhkd &>/dev/null; then
+      notifications "SXHKD" "sxhkd is already running"
       printf_red 'sxhkd is already running'
       exitCode=1
     else
-      sxhkd -c "$RUN_SXHKD_BIND_FILE" -s "$RUN_SXHKD_FIFO_FILE" "$@" &>>"$RUN_SXHKD_LOG_FILE" &
+      notifications "SXHKD" "sxhkd is staring"
+      sxhkd -c "$RUN_SXHKD_BIND_FILE" -s "$RUN_SXHKD_FIFO_FILE" ${@:-} &>>"$RUN_SXHKD_LOG_FILE" &
       exitCode=$?
     fi
     return $exitCode
@@ -226,7 +228,7 @@ EOF
     fi
     ;;
   *)
-    sxhkdcmd "$@"
+    sxhkdcmd "$*"
     ;;
   esac
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
