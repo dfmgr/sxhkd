@@ -85,7 +85,8 @@ EOF
   }
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   sxhkd_kill() {
-    local pid="$(__get_sxhkd_pid)"
+    local pid
+    pid="$(__get_sxhkd_pid)"
     if [[ -n "$pid" ]] &>/dev/null; then
       kill -9 "$pid" &>/dev/null
     fi
@@ -145,7 +146,8 @@ EOF
   fi
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   # options
-  local setopts=$(getopt -o "$SHORTOPTS" --long "$LONGOPTS" -a -n "$PROG" -- "$@" 2>/dev/null)
+  local setopts
+  setopts=$(getopt -o "$SHORTOPTS" --long "$LONGOPTS" -a -n "$PROG" -- "$@" 2>/dev/null)
   eval set -- "${setopts[@]}" 2>/dev/null
   while :; do
     case $1 in
