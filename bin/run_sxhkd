@@ -66,7 +66,7 @@ run_sxhkd_main() {
 RUN_SXHKD_LOG_FILE="${LOGDIR:-$HOME/.local/log}/sxhkd/run.log"
 RUN_SXHKD_BIND_FILE="$HOME/.config/sxhkd/sxhkdrc"
 RUN_SXHKD_FIFO_FILE="$HOME/.cache/sxhkd"
-RUN_SXHKD_NOTIFY_ENABLED="yes"
+RUN_SXHKD_NOTIFY_ENABLED="${RUN_SXHKD_NOTIFY_ENABLED:-yes}"
 RUN_SXHKD_NOTIFY_CLIENT_NAME="${NOTIFY_CLIENT_NAME:-$PROG}"
 RUN_SXHKD_NOTIFY_CLIENT_ICON="${NOTIFY_CLIENT_ICON:-$RUN_SXHKD_NOTIFY_CLIENT_ICON}"
 
@@ -81,7 +81,7 @@ EOF
   }
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   __get_sxhkd_pid() {
-    pgrep sxhkd | head -n1 | grep '^'
+    ps -ux | grep [s]xhkdrc | head -n1 | grep '^' && true || false
     return $?
   }
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -100,13 +100,14 @@ EOF
   }
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   sxhkdcmd() {
-    if pgrep [s]xhkd &>/dev/null; then
+    if ps -ux | grep [s]xhkdrc | head -n1 | grep '^' &>/dev/null; then
       __notifications "SXHKD" "sxhkd is already running"
       printf_red 'sxhkd is already running'
       exitCode=1
     else
-      __notifications "SXHKD" "sxhkd is staring"
-      sxhkd -c "$RUN_SXHKD_BIND_FILE" -s "$RUN_SXHKD_FIFO_FILE" "${*:-}" &>>"$RUN_SXHKD_LOG_FILE" &
+      __notifications "SXHKD" "sxhkd is starting"
+      printf_green "sxhkd is starting"
+      sxhkd -c "$RUN_SXHKD_BIND_FILE" -s "$RUN_SXHKD_FIFO_FILE" &>>"$RUN_SXHKD_LOG_FILE" &
       exitCode=$?
     fi
     return $exitCode
@@ -119,7 +120,7 @@ EOF
   local RUN_SXHKD_CONFIG_BACKUP_DIR="$HOME/.local/share/misc/run_sxhkd/backups"
   local RUN_SXHKD_OPTIONS_DIR="$HOME/.local/share/misc/run_sxhkd/options"
   local RUN_SXHKD_TEMP_FILE="${TMPDIR:-/tmp}/run_sxhkd"
-  local RUN_SXHKD_NOTIFY_ENABLED="yes"
+  local RUN_SXHKD_NOTIFY_ENABLED="${RUN_SXHKD_NOTIFY_ENABLED:-yes}"
   local RUN_SXHKD_NOTIFY_CLIENT_NAME="${NOTIFY_CLIENT_NAME:-$PROG}"
   local RUN_SXHKD_NOTIFY_CLIENT_ICON="${NOTIFY_CLIENT_ICON:-$RUN_SXHKD_NOTIFY_CLIENT_ICON}"
   local RUN_SXHKD_BIND_FILE="${RUN_SXHKD_BIND_FILE:-$HOME/.config/sxhkd/sxhkdrc}"
@@ -127,7 +128,6 @@ EOF
   local RUN_SXHKD_LOG_FILE="${LOGDIR:-$HOME/.local/log}/sxhkd/run.log"
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   # Argument/Option settings
-  local setopts=""
   local SETARGS="${*}"
   local SHORTOPTS="c,v,h,s,r,k"
   local LONGOPTS="options,config,version,help,start,restart,kill"
@@ -181,7 +181,7 @@ EOF
       ;;
     -r | --restart)
       shift 1
-      pkill -USR1 -x sxhkd &>>"$RUN_SXHKD_LOG_FILE" && notifications 'SXHKD' 'Reloaded the config'
+      pkill -USR1 -x sxhkd &>>"$RUN_SXHKD_LOG_FILE" && __notifications 'SXHKD' 'Reloaded the config'
       exit $?
       ;;
     -k | --kill)
@@ -229,7 +229,7 @@ EOF
     fi
     ;;
   *)
-    sxhkdcmd "$*"
+    sxhkdcmd
     ;;
   esac
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
