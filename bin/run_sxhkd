@@ -8,6 +8,7 @@ run_sxhkd_main() {
   SRC_DIR="${BASH_SOURCE%/*}"
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   #set opts
+  [[ -n "$DISPLAY" ]] && [ ! -t 0 ] && { [[ "$1" = *term ]] || [ $# = 0 ]; } && TERMINAL_APP="TRUE" eval ${TERMINAL:-myterminal} -e "${APPNAME:-bash} ${*:-}" && { exit || exit 1; }
   trap '[ -f "$RUN_SXHKD_TEMP_FILE" ] && rm -Rf "$RUN_SXHKD_TEMP_FILE" &>/dev/null' EXIT
 
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -105,7 +106,7 @@ EOF
       exitCode=1
     else
       notifications "SXHKD" "sxhkd is staring"
-      sxhkd -c "$RUN_SXHKD_BIND_FILE" -s "$RUN_SXHKD_FIFO_FILE" ${@:-} &>>"$RUN_SXHKD_LOG_FILE" &
+      sxhkd -c "$RUN_SXHKD_BIND_FILE" -s "$RUN_SXHKD_FIFO_FILE" "${*:-}" &>>"$RUN_SXHKD_LOG_FILE" &
       exitCode=$?
     fi
     return $exitCode
