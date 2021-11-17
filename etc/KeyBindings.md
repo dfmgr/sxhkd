@@ -1,7 +1,7 @@
 ## Key Bindings
   
 ```text
-super + shift + escape           # kill display  
+super + shift + Alt + escape     # kill display  
 super + Escape                   # Make sxhkd reload its configuration files  
 super + Return                   # Open terminal  
 super + d                        # Open dmenu  

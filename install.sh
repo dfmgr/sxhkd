@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-APPNAME="sxhkd"
+PROG="sxhkd"
 USER="${SUDO_USER:-${USER}}"
 HOME="${USER_HOME:-${HOME}}"
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -49,17 +49,17 @@ unsupported_oses
 scripts_check
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Defaults
-APPNAME="${APPNAME:-sxhkd}"
-APPDIR="$CONF/$APPNAME"
-INSTDIR="$CASJAYSDEVSHARE/$SCRIPTS_PREFIX/$APPNAME"
+PROG="${PROG:-sxhkd}"
+APPDIR="$CONF/$PROG"
+INSTDIR="$CASJAYSDEVSHARE/$SCRIPTS_PREFIX/$PROG"
 REPO_BRANCH="${GIT_REPO_BRANCH:-master}"
-REPO="${DFMGR:-https://github.com/dfmgr}/$APPNAME"
+REPO="${DFMGR:-https://github.com/dfmgr}/$PROG"
 REPORAW="$REPO/raw/$REPO_BRANCH"
 APPVERSION="$(__appversion "$REPORAW/version.txt")"
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Setup plugins
 PLUGNAMES=""
-PLUGDIR="${SHARE:-$HOME/.local/share}/$APPNAME"
+PLUGDIR="${SHARE:-$HOME/.local/share}/$PROG"
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Call the dfmgr function
 dfmgr_install
@@ -78,7 +78,7 @@ show_optvars "$@"
 dfmgr_run_init
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # end with a space
-APP="$APPNAME guake links xwallpaper "
+APP="$PROG guake links xwallpaper "
 PERL=""
 PYTH=""
 PIPS=""
@@ -116,17 +116,17 @@ ensure_perms
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Backup if needed
 if [ -d "$APPDIR" ]; then
-  execute "backupapp $APPDIR $APPNAME" "Backing up $APPDIR"
+  execute "backupapp $APPDIR $PROG" "Backing up $APPDIR"
 fi
 # Main progam
 if am_i_online; then
   if [ -d "$INSTDIR/.git" ]; then
-    execute "git_update $INSTDIR" "Updating $APPNAME configurations"
+    execute "git_update $INSTDIR" "Updating $PROG configurations"
   else
-    execute "git_clone $REPO $INSTDIR" "Installing $APPNAME ions"
+    execute "git_clone $REPO $INSTDIR" "Installing $PROG ions"
   fi
   # exit on fail
-  failexitcode $? "Failed to download $REPO/$APPNAME to $INSTDIR"
+  failexitcode $? "Failed to download $REPO/$PROG to $INSTDIR"
 fi
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Plugins

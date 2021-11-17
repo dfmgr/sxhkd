@@ -6,7 +6,7 @@ HOME="${USER_HOME:-${HOME}}"
 SRC_DIR="${BASH_SOURCE%/*}"
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 #set opts
-[[ -n "$DISPLAY" ]] && [ ! -t 0 ] && { [[ "$1" = *term ]] || [ $# = 0 ]; } && TERMINAL_APP="TRUE" eval ${TERMINAL:-myterminal} -e "${APPNAME:-bash} ${*:-}" && { exit || exit 1; }
+[[ -n "$DISPLAY" ]] && [ ! -t 0 ] && { [[ "$1" = *term ]] || [ $# = 0 ]; } && TERMINAL_APP="TRUE" eval ${TERMINAL:-myterminal} -e "${PROG:-bash} ${*:-}" && { exit || exit 1; }
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ##@Version       : 031520211934-git
@@ -38,8 +38,8 @@ fi
 __version() { app_version; }
 __help() {
   app_help "Usage: sxhkd_notify  -  sxhkd_notify --version" \
-    "-v, --version          -  display version" \
-    "-h, --help             -  display help"
+    "-v, --version               -  display version" \
+    "-h, --help                  -  display help"
 }
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Main function

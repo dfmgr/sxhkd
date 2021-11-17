@@ -40,7 +40,7 @@ run_sxhkd_main() {
   __version() { app_version; }
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   __help() {
-    app_help "4" "Usage: run_sxhkd  " \
+    app_help "4" "Usage: run_sxhkd [options] " \
       "*                      -  start sxhkd" \
       "bindings               -  show keybindings" \
       "-s, --start            -  start sxhkd" \
@@ -98,11 +98,15 @@ EOF
     return ${exitCode:-$?}
   }
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+  sxhkd_reload() {
+    pkill -USR1 -x sxhkd &>>"$RUN_SXHKD_LOG_FILE" && __sxhkd_notifications 'SXHKD' 'Reloaded the config'
+    return $?
+  }
+  # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   sxhkdcmd() {
     if ps -ux | grep [s]xhkdrc | head -n1 | grep '^' &>/dev/null; then
-      __sxhkd_notifications "SXHKD" "sxhkd is already running"
-      printf_red 'sxhkd is already running'
-      exitCode=1
+      sxhkd_reload
+      exitCode=$?
     else
       __sxhkd_notifications "SXHKD" "sxhkd is starting"
       printf_green "sxhkd is starting"
@@ -199,10 +203,10 @@ EOF
   #set -- "$SETARGS"
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   # Actions based on env
-  export NOTIFY_CLIENT_NAME="${RUN_SXHKD_NOTIFY_CLIENT_NAME}"
-  export NOTIFY_CLIENT_ICON="${RUN_SXHKD_NOTIFY_CLIENT_ICON}"
   if [ "$RUN_SXHKD_NOTIFY_ENABLED" = "yes" ]; then
     __sxhkd_notifications() {
+      export NOTIFY_CLIENT_NAME="${RUN_SXHKD_NOTIFY_CLIENT_NAME}"
+      export NOTIFY_CLIENT_ICON="${RUN_SXHKD_NOTIFY_CLIENT_ICON}"
       notifications "$1" "$2" || return 1
     }
   else
@@ -229,7 +233,7 @@ EOF
 
   restart)
     shift 1
-    pkill -USR1 -x sxhkd &>>"$RUN_SXHKD_LOG_FILE" && __sxhkd_notifications 'SXHKD' 'Reloaded the config'
+    sxhkd_reload
     ;;
 
   start)

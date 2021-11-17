@@ -6,7 +6,7 @@ HOME="${USER_HOME:-${HOME}}"
 SRC_DIR="${BASH_SOURCE%/*}"
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 #set opts
-[[ -n "$DISPLAY" ]] && [ ! -t 0 ] && { [[ "$1" = *term ]] || [ $# = 0 ]; } && TERMINAL_APP="TRUE" eval ${TERMINAL:-myterminal} -e "${APPNAME:-bash} ${*:-}" && { exit || exit 1; }
+[[ -n "$DISPLAY" ]] && [ ! -t 0 ] && { [[ "$1" = *term ]] || [ $# = 0 ]; } && TERMINAL_APP="TRUE" eval ${TERMINAL:-myterminal} -e "${PROG:-} ${*:-}" && { exit || exit 1; }
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ##@Version       : 031520211703-git
@@ -57,8 +57,9 @@ main() {
   local sxhkd_conf_file sxhkd_bindings
   sxhkd_conf_file="$HOME/.config/sxhkd/sxhkdrc"
   sxhkd_bindings="$(awk '/^[a-z]/ && last {print "<small>",$0,"\t",last,"</small>"} {last=""} /^#/{last=$0}' "$sxhkd_conf_file")"
+  sxhkd_bindings_clean="$(echo "$sxhkd_bindings" | sed 's|<small> ||g;s|#.*||g')"
   # begin main app
-  echo -e "$sxhkd_bindings " | column -t -s $'\t' | rofi -dmenu -i -markup-rows -width 1000 -lines 20
+  echo -e "$sxhkd_bindings " | column -t -s $'\t' | rofi -theme purple -dmenu -i -markup-rows -width 1000 -lines 20
   return 0
 }
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
