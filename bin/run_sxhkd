@@ -94,8 +94,9 @@ EOF
   }
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   sxhkd_kill() {
-    local pid
+    local pid date
     pid="$(__get_sxhkd_pid)"
+    date="$(date +'%Y-%m-%d at %H:%M')"
     if [[ -n "$pid" ]] &>/dev/null; then
       kill -9 "$pid" &>/dev/null
     fi
@@ -114,13 +115,17 @@ EOF
   }
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   sxhkd_reload() {
+    local pid date
+    date="$(date +'%Y-%m-%d at %H:%M')"
+    echo "Restarting sxhkd: $date" >>"$RUN_SXHKD_LOG_FILE"
     pkill -USR1 -x sxhkd &>>"$RUN_SXHKD_LOG_FILE" && __sxhkd_notifications 'Reloaded the config'
     return $?
   }
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   sxhkdcmd() {
+    local pid date
+    date="$(date +'%Y-%m-%d at %H:%M')"
     if __get_sxhkd_pid &>/dev/null; then
-      echo "Restarting sxhkd: $date" >>"$RUN_SXHKD_LOG_FILE"
       sxhkd_reload
       exitCode=$?
     else
@@ -242,7 +247,7 @@ EOF
   cmd_exists --error bash sxhkd || exit 1
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   # APP Variables
-  date="$(date +'%Y-%m-%d at %H:%m')"
+
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   # begin main app
   case "${SETOPTS:-$1}" in

@@ -1,0 +1,4 @@
+{
+  "files.associations": { "sxhkdrc": "plaintext" },
+  "[plaintext]": { "editor.formatOnSave": false }
+}
