@@ -104,14 +104,19 @@ EOF
   }
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   sxhkdcmd() {
-    if ps -ux | grep [s]xhkdrc | head -n1 | grep '^' &>/dev/null; then
+    if ps -ux | grep '[s]xhkd' | head -n1 | grep '^' &>/dev/null; then
       sxhkd_reload
       exitCode=$?
     else
       __sxhkd_notifications "SXHKD" "sxhkd is starting"
       printf_green "sxhkd is starting"
-      sxhkd -c "$RUN_SXHKD_BIND_FILE" -s "$RUN_SXHKD_FIFO_FILE" &>>"$RUN_SXHKD_LOG_FILE" &
-      exitCode=$?
+      if [[ -z "$RUN_SXHKD_FIFO_FILE" ]]; then
+        sxhkd -c "$RUN_SXHKD_BIND_FILE" -s "$RUN_SXHKD_FIFO_FILE" &>>"$RUN_SXHKD_LOG_FILE" &
+        exitCode=$?
+      else
+        sxhkd -c "$RUN_SXHKD_BIND_FILE" &>>"$RUN_SXHKD_LOG_FILE" &
+        exitCode=$?
+      fi
     fi
     return $exitCode
   }
