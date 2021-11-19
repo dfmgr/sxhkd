@@ -1,7 +1,7 @@
 # simple X hotkey daemon - this is set on all desktops
 ########################################################################
 # Kill running desktop
-super + shift + Alt + Escape
+super + shift + alt + Escape
   killall "$DESKTOP_SESSION"
 
 ########################################################################
@@ -108,7 +108,7 @@ alt + s
   ss_screenkey
 
 # Show clipboard
-alt + Inser
+alt + insert
   showclip
 
 # Pick screenshot type
