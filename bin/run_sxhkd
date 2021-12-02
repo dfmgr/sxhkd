@@ -179,7 +179,9 @@ EOF
     __sxhkd_notifications() {
       export NOTIFY_CLIENT_NAME="$RUN_SXHKD_NOTIFY_CLIENT_NAME"
       export NOTIFY_CLIENT_ICON="$RUN_SXHKD_NOTIFY_CLIENT_ICON"
-      notifications "$RUN_SXHKD_NOTIFY_CLIENT_NAME" "$@" || return 1
+      notifications "$RUN_SXHKD_NOTIFY_CLIENT_NAME" "$@" && exitCode=0 || exitCode=1
+      unset NOTIFY_CLIENT_NAME NOTIFY_CLIENT_ICON
+      return ${exitCode:-$?}
     }
   else
     __sxhkd_notifications() { false; }
