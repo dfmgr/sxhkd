@@ -52,7 +52,7 @@ scripts_check
 PROG="${PROG:-sxhkd}"
 APPDIR="$CONF/$PROG"
 INSTDIR="$CASJAYSDEVSHARE/$SCRIPTS_PREFIX/$PROG"
-REPO_BRANCH="${GIT_REPO_BRANCH:-master}"
+REPO_BRANCH="${GIT_REPO_BRANCH:-main}"
 REPO="${DFMGR:-https://github.com/dfmgr}/$PROG"
 REPORAW="$REPO/raw/$REPO_BRANCH"
 APPVERSION="$(__appversion "$REPORAW/version.txt")"
