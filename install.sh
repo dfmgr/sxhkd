@@ -176,7 +176,7 @@ PYTHON_PIP=""
 PHP_COMPOSER=""
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Run custom actions
-
+__app_is_running sxhkd && SXHKD_IS_RUNNING="true"
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Show a custom message after install
 __run_post_message() {
@@ -193,8 +193,8 @@ __run_pre_install() {
 # run before primary post install function
 __run_prepost_install() {
   local getRunStatus=0
-  if __app_is_running; then
-    pkill -USR1 -x sxhkd 
+  if [ "$SXHKD_IS_RUNNING" = "true" ]; then
+    pkill -USR1 -x sxhkd
     __app_is_running sxhkd && notifications "sxhkd" "🎊 Reloaded config"
   fi
   return $getRunStatus
