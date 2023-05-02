@@ -175,6 +175,9 @@ RUBY_GEMS=""
 PYTHON_PIP=""
 PHP_COMPOSER=""
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Run custom actions
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Show a custom message after install
 __run_post_message() {
   true
@@ -191,7 +194,8 @@ __run_pre_install() {
 __run_prepost_install() {
   local getRunStatus=0
   if __app_is_running; then
-    pkill -USR1 -x sxhkd && __cmd_exists notifications && notifications "🎊 sxhkd" "Reloaded config"
+    pkill -USR1 -x sxhkd 
+    __app_is_running sxhkd && notifications "sxhkd" "🎊 Reloaded config"
   fi
   return $getRunStatus
 }
