@@ -12,7 +12,7 @@ trap '[ -f "$RUN_SXHKD_TEMP_FILE" ] && rm -Rf "$RUN_SXHKD_TEMP_FILE" &>/dev/null
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ##@Version       : 202104020437-git
 # @Author        : Jason Hempstead
-# @Contact       : jason@casjaysdev.com
+# @Contact       : jason@casjaysdev.pro
 # @License       : LICENSE.md
 # @ReadME        : run_sxhkd --help
 # @Copyright     : Copyright: (c) 2021 Jason Hempstead, CasjaysDev
