@@ -154,7 +154,7 @@ LATEST_RELEASE=""
 GLOBAL_OS_PACKAGES="sxhkd "
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Define linux only packages
-LINUX_OS_PACKAGES="sxhkd guake links xwallpaper"
+LINUX_OS_PACKAGES="guake links xwallpaper"
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Define MacOS only packages
 MAC_OS_PACKAGES=""
