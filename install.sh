@@ -324,6 +324,7 @@ fi
 unset instCode
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Install Plugins
+exitC=0
 exitCodeP=0
 if __am_i_online; then
   if [ "$PLUGIN_REPOS" != "" ]; then
@@ -333,10 +334,12 @@ if __am_i_online; then
       plugin_dir="$PLUGIN_DIR/$plugin_name"
       if [ -d "$plugin_dir/.git" ]; then
         execute "git_update $plugin_dir" "Updating plugin $plugin_name"
-        [ $? -ne 0 ] && exitCodeP=$(($? + exitCodeP)) && printf_red "Failed to update $plugin_name"
+        exitC=$?
+        [ $exitC -ne 0 ] && exitCodeP=$((exitC + exitCodeP)) && printf_red "Failed to update $plugin_name"
       else
         execute "git_clone $plugin $plugin_dir" "Installing plugin $plugin_name"
-        [ $? -ne 0 ] && exitCodeP=$(($? + exitCodeP)) && printf_red "Failed to install $plugin_name"
+        exitC=$?
+        [ $exitC -ne 0 ] && exitCodeP=$((exitC + exitCodeP)) && printf_red "Failed to install $plugin_name"
       fi
     done
   fi
@@ -345,7 +348,7 @@ if __am_i_online; then
   # exit on fail
   __failexitcode $exitCodeP "Installation of plugin failed"
 fi
-unset exitCodeP
+unset exitCodeP exitC
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # run post install scripts
 run_postinst() {
