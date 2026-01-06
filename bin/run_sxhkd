@@ -1,66 +1,133 @@
 #!/usr/bin/env bash
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-PROG="$(basename "$0")"
-VERSION="202104020437-git"
-USER="${SUDO_USER:-${USER}}"
-HOME="${USER_HOME:-${HOME}}"
-SRC_DIR="${BASH_SOURCE%/*}"
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-#set opts
-trap '[ -f "$RUN_SXHKD_TEMP_FILE" ] && rm -Rf "$RUN_SXHKD_TEMP_FILE" &>/dev/null' EXIT
-
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-##@Version       : 202104020437-git
+##@Version       : 202601061012-git
 # @Author        : Jason Hempstead
 # @Contact       : jason@casjaysdev.pro
-# @License       : LICENSE.md
+# @License       : WTFPL
 # @ReadME        : run_sxhkd --help
 # @Copyright     : Copyright: (c) 2021 Jason Hempstead, CasjaysDev
 # @Created       : Friday, Apr 02, 2021 04:53 EDT
 # @File          : run_sxhkd
 # @Description   : Simple X HotKey Daemon wrapper script
+# @Changelog     : Refactored for self-contained operation
 # @TODO          :
 # @Other         :
 # @Resource      :
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-run_sxhkd_main() {
-  # Main function file
-  if [ -f "$SRC_DIR/functions.bash" ]; then
-    FUNCTIONS_DIR="$SRC_DIR"
-    . "$FUNCTIONS_DIR/functions.bash"
-  elif [ -f "$HOME/.local/bin/functions.bash" ]; then
-    FUNCTIONS_DIR="$HOME/.local/bin"
-    . "$FUNCTIONS_DIR/functions.bash"
-  else
-    printf "\t\t\033[0;31m%s \033[0m\n" "Couldn't source the functions file from $FUNCTIONS_DIR"
-    return 1
+# Script variables
+PROG="run_sxhkd"
+VERSION="202601061012-git"
+USER="${SUDO_USER:-${USER}}"
+HOME="${USER_HOME:-${HOME}}"
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Environment Detection
+__get_os() {
+  case "$(uname -s)" in
+    Linux*) echo "linux" ;;
+    Darwin*) echo "mac" ;;
+    *BSD*) echo "bsd" ;;
+    MINGW*|MSYS*|CYGWIN*) echo "windows" ;;
+    *) echo "unknown" ;;
+  esac
+}
+
+__is_remote() {
+  [ -n "${SSH_CLIENT:-}" ] || [ -n "${SSH_TTY:-}" ] || [ -n "${SSH_CONNECTION:-}" ]
+}
+
+__has_display() {
+  [ -n "${DISPLAY:-}" ] || [ -n "${WAYLAND_DISPLAY:-}" ]
+}
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Core helper functions
+__cmd_exists() { command -v "$1" >/dev/null 2>&1; }
+
+__is_running() {
+  local proc="$1"
+  case "$(__get_os)" in
+    mac) pgrep -x "$proc" >/dev/null 2>&1 ;;
+    windows) tasklist 2>/dev/null | grep -qi "$proc" ;;
+    *) pgrep -x "$proc" >/dev/null 2>&1 || pgrep -f "$proc" >/dev/null 2>&1 ;;
+  esac
+}
+
+__printf_color() {
+  local color="${2:-0}"
+  printf "\033[0;%sm%s\033[0m\n" "$color" "$1"
+}
+__printf_red() { __printf_color "$1" "31"; }
+__printf_green() { __printf_color "$1" "32"; }
+__printf_yellow() { __printf_color "$1" "33"; }
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Smart notifications
+__notifications() {
+  local title="$1" msg="$2"
+
+  # Remote/no display - just print to stderr
+  if __is_remote || ! __has_display; then
+    printf "[%s] %s\n" "$title" "$msg" >&2
+    return 0
   fi
-  # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-  # helper functions - See github.com/dfmgr/misc/bin/functions.bash
-  __version() { app_version; }
-  # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-  __help() {
-    app_help "4" "Usage: run_sxhkd [options] " \
-      "*                      -  start sxhkd" \
-      "bindings               -  show keybindings" \
-      "-s, --start            -  start sxhkd" \
-      "-r, --restart          -  restart sxhkd" \
-      "-k, --kill             -  stop sxhkd" \
-      "-c, --config           -  create config file" \
-      "-v, --version          -  display version" \
-      "-h, --help             -  display help" \
-      "--options              -  used by completions"
-    exit $?
-  }
-  # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-  __gen_config() {
-    printf_green "Generating the config file in"
-    printf_green "$RUN_SXHKD_CONFIG_DIR/$RUN_SXHKD_CONFIG_FILE"
-    [ -d "$RUN_SXHKD_CONFIG_DIR" ] || mkdir -p "$RUN_SXHKD_CONFIG_DIR"
-    [ -d "$RUN_SXHKD_CONFIG_BACKUP_DIR" ] || mkdir -p "$RUN_SXHKD_CONFIG_BACKUP_DIR"
-    [ -f "$RUN_SXHKD_CONFIG_DIR/$RUN_SXHKD_CONFIG_FILE" ] &&
-      cp -Rf "$RUN_SXHKD_CONFIG_DIR/$RUN_SXHKD_CONFIG_FILE" "$RUN_SXHKD_CONFIG_BACKUP_DIR/$RUN_SXHKD_CONFIG_FILE.$$"
-    cat <<EOF >"$RUN_SXHKD_CONFIG_DIR/$RUN_SXHKD_CONFIG_FILE"
+
+  # GUI notifications based on OS
+  case "$(__get_os)" in
+    mac)
+      osascript -e "display notification \"$msg\" with title \"$title\"" 2>/dev/null && return 0
+      ;;
+    linux|bsd)
+      if __cmd_exists notify-send; then
+        notify-send "$title" "$msg" 2>/dev/null && return 0
+      fi
+      ;;
+    windows)
+      if __cmd_exists powershell.exe; then
+        powershell.exe -Command "Add-Type -AssemblyName System.Windows.Forms; [System.Windows.Forms.MessageBox]::Show('$msg', '$title')" 2>/dev/null && return 0
+      fi
+      ;;
+  esac
+
+  # Fallback
+  printf "[%s] %s\n" "$title" "$msg" >&2
+}
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Version and help
+__version() { echo "$PROG $VERSION"; }
+
+__help() {
+  cat <<EOF
+$PROG $VERSION - Simple X HotKey Daemon wrapper script
+
+Usage: $PROG [options]
+
+Options:
+  -v, --version    Show version
+  -h, --help       Show this help
+  -s, --start      Start sxhkd
+  -r, --restart    Restart/reload sxhkd config
+  -k, --kill       Stop sxhkd
+  -p, --status     Show sxhkd status
+  -c, --config     Create config file
+  --options        Show all options
+
+Commands:
+  bindings         Show keybindings
+
+Examples:
+  $PROG              Start or reload sxhkd
+  $PROG --restart    Reload sxhkd configuration
+  $PROG bindings     Display keybindings
+EOF
+}
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Config file management
+__gen_config() {
+  __printf_green "Generating the config file in"
+  __printf_green "$RUN_SXHKD_CONFIG_DIR/$RUN_SXHKD_CONFIG_FILE"
+  [ -d "$RUN_SXHKD_CONFIG_DIR" ] || mkdir -p "$RUN_SXHKD_CONFIG_DIR"
+  [ -d "$RUN_SXHKD_CONFIG_BACKUP_DIR" ] || mkdir -p "$RUN_SXHKD_CONFIG_BACKUP_DIR"
+  [ -f "$RUN_SXHKD_CONFIG_DIR/$RUN_SXHKD_CONFIG_FILE" ] &&
+    cp -Rf "$RUN_SXHKD_CONFIG_DIR/$RUN_SXHKD_CONFIG_FILE" "$RUN_SXHKD_CONFIG_BACKUP_DIR/$RUN_SXHKD_CONFIG_FILE.$$"
+  cat <<EOF >"$RUN_SXHKD_CONFIG_DIR/$RUN_SXHKD_CONFIG_FILE"
 # Settings for run_sxhkd
 RUN_SXHKD_LOG_FILE="${LOGDIR:-$HOME/.local/log}/sxhkd/run.log"
 RUN_SXHKD_BIND_FILE="${RUN_SXHKD_BIND_FILE:-$HOME/.config/sxhkd/sxhkdrc}"
@@ -70,82 +137,86 @@ RUN_SXHKD_NOTIFY_CLIENT_NAME="${RUN_SXHKD_NOTIFY_CLIENT_NAME:-SXHKD}"
 RUN_SXHKD_NOTIFY_CLIENT_ICON="${RUN_SXHKD_NOTIFY_CLIENT_ICON:-system}"
 
 EOF
-    if [ -f "$RUN_SXHKD_CONFIG_DIR/$RUN_SXHKD_CONFIG_FILE" ]; then
-      printf_green "Your config file for run_sxhkd has been created"
-      true
-    else
-      printf_red "Failed to create the config file"
-      false
-    fi
-  }
-  # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-  __create_fifo() {
-    local RUN_SXHKD_FIFO_FILE="${1:-$RUN_SXHKD_FIFO_FILE}"
-    if [ ! -p "$RUN_SXHKD_FIFO_FILE" ]; then
-      mkfifo "$RUN_SXHKD_FIFO_FILE" &>/dev/null
-    fi
-    [ -p "$RUN_SXHKD_FIFO_FILE" ] && true || false
-    return $?
-  }
-  # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-  __get_sxhkd_pid() {
-    ps -ux | grep [s]xhkdrc | head -n1 | awk '{print $2}' | grep '^' && true || false
-    return $?
-  }
-  # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-  sxhkd_kill() {
-    local pid date
-    pid="$(__get_sxhkd_pid)"
-    date="$(date +'%Y-%m-%d at %H:%M')"
-    if [[ -n "$pid" ]] &>/dev/null; then
-      kill -9 "$pid" &>/dev/null
-    fi
-    if __get_sxhkd_pid &>/dev/null; then
-      echo "Failed to stop sxhkd: $date" >>"$RUN_SXHKD_LOG_FILE"
-      __sxhkd_notifications "Failed to stop sxhkd"
+  if [ -f "$RUN_SXHKD_CONFIG_DIR/$RUN_SXHKD_CONFIG_FILE" ]; then
+    __printf_green "Your config file for run_sxhkd has been created"
+    return 0
+  else
+    __printf_red "Failed to create the config file"
+    return 1
+  fi
+}
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Additional helper functions
+__create_fifo() {
+  local RUN_SXHKD_FIFO_FILE="${1:-$RUN_SXHKD_FIFO_FILE}"
+  if [ ! -p "$RUN_SXHKD_FIFO_FILE" ]; then
+    mkfifo "$RUN_SXHKD_FIFO_FILE" &>/dev/null
+  fi
+  [ -p "$RUN_SXHKD_FIFO_FILE" ] && return 0 || return 1
+}
 
-      exitCode=1
-    else
-      echo "Stopped sxhkd: $date" >>"$RUN_SXHKD_LOG_FILE"
-      __sxhkd_notifications "Stopped sxhkd"
-      rm -Rf "$RUN_SXHKD_FIFO_FILE" &>/dev/null
-      exitCode=0
-    fi
-    return ${exitCode:-$?}
-  }
-  # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-  sxhkd_reload() {
-    local pid date
-    date="$(date +'%Y-%m-%d at %H:%M')"
-    echo "Restarting sxhkd: $date" >>"$RUN_SXHKD_LOG_FILE"
-    pkill -USR1 -x sxhkd &>>"$RUN_SXHKD_LOG_FILE" && __sxhkd_notifications 'Reloaded the config'
-    return $?
-  }
-  # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-  sxhkdcmd() {
-    local pid date
-    date="$(date +'%Y-%m-%d at %H:%M')"
-    if __get_sxhkd_pid &>/dev/null; then
-      sxhkd_reload
+__get_sxhkd_pid() {
+  ps -ux 2>/dev/null | grep '[s]xhkdrc' | head -n1 | awk '{print $2}' | grep '^' && return 0 || return 1
+}
+
+sxhkd_kill() {
+  local pid date
+  pid="$(__get_sxhkd_pid)"
+  date="$(date +'%Y-%m-%d at %H:%M')"
+  if [[ -n "$pid" ]] &>/dev/null; then
+    kill -9 "$pid" &>/dev/null
+  fi
+  if __get_sxhkd_pid &>/dev/null; then
+    echo "Failed to stop sxhkd: $date" >>"$RUN_SXHKD_LOG_FILE"
+    __sxhkd_notifications "Failed to stop sxhkd"
+    exitCode=1
+  else
+    echo "Stopped sxhkd: $date" >>"$RUN_SXHKD_LOG_FILE"
+    __sxhkd_notifications "Stopped sxhkd"
+    rm -Rf "$RUN_SXHKD_FIFO_FILE" &>/dev/null
+    exitCode=0
+  fi
+  return ${exitCode:-$?}
+}
+
+sxhkd_reload() {
+  local date
+  date="$(date +'%Y-%m-%d at %H:%M')"
+  echo "Restarting sxhkd: $date" >>"$RUN_SXHKD_LOG_FILE"
+  pkill -USR1 -x sxhkd &>>"$RUN_SXHKD_LOG_FILE" && __sxhkd_notifications 'Reloaded the config'
+  return $?
+}
+
+sxhkdcmd() {
+  local date
+  date="$(date +'%Y-%m-%d at %H:%M')"
+  if __get_sxhkd_pid &>/dev/null; then
+    sxhkd_reload
+    exitCode=$?
+  else
+    __sxhkd_notifications "sxhkd is starting"
+    __printf_green "sxhkd is starting"
+    echo "Starting sxhkd: $date" >"$RUN_SXHKD_LOG_FILE"
+    if [[ -n "$RUN_SXHKD_FIFO_FILE" ]]; then
+      __create_fifo "$RUN_SXHKD_FIFO_FILE"
+      sxhkd -c "$RUN_SXHKD_BIND_FILE" -s "$RUN_SXHKD_FIFO_FILE" &>>"$RUN_SXHKD_LOG_FILE" &
       exitCode=$?
     else
-      __sxhkd_notifications "sxhkd is starting"
-      printf_green "sxhkd is starting"
-      echo "Starting sxhkd: $date" >"$RUN_SXHKD_LOG_FILE"
-      if [[ -n "$RUN_SXHKD_FIFO_FILE" ]]; then
-        __create_fifo "$RUN_SXHKD_FIFO_FILE"
-        sxhkd -c "$RUN_SXHKD_BIND_FILE" -s "$RUN_SXHKD_FIFO_FILE" &>>"$RUN_SXHKD_LOG_FILE" &
-        exitCode=$?
-      else
-        sxhkd -c "$RUN_SXHKD_BIND_FILE" &>>"$RUN_SXHKD_LOG_FILE" &
-        exitCode=$?
-      fi
+      sxhkd -c "$RUN_SXHKD_BIND_FILE" &>>"$RUN_SXHKD_LOG_FILE" &
+      exitCode=$?
     fi
-    return ${exitCode:-$?}
-  }
-  # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+  fi
+  return ${exitCode:-$?}
+}
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Main function
+main() {
+  local exitCode=0
+
+  # Set trap
+  trap '[ -f "$RUN_SXHKD_TEMP_FILE" ] && rm -Rf "$RUN_SXHKD_TEMP_FILE" &>/dev/null' EXIT
+
   # Defaults
-  local exitCode=""
   local RUN_SXHKD_CONFIG_FILE="settings.conf"
   local RUN_SXHKD_CONFIG_DIR="${RUN_SXHKD_CONFIG_DIR:-$HOME/.config/misc/settings/run_sxhkd}"
   local RUN_SXHKD_CONFIG_BACKUP_DIR="${RUN_SXHKD_CONFIG_BACKUP_DIR:-$HOME/.local/share/misc/run_sxhkd/backups}"
@@ -157,37 +228,32 @@ EOF
   local RUN_SXHKD_BIND_FILE="${RUN_SXHKD_BIND_FILE:-$HOME/.config/sxhkd/sxhkdrc}"
   local RUN_SXHKD_FIFO_FILE="${RUN_SXHKD_FIFO_FILE:-$HOME/.cache/sxhkd}"
   local RUN_SXHKD_LOG_FILE="${RUN_SXHKD_LOG_FILE:-${LOGDIR:-$HOME/.local/log}/sxhkd/run.log}"
-  # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
   # Argument/Option settings
   local SETARGS="${*}"
   local SHORTOPTS="c,v,h,s,r,k,p"
   local LONGOPTS="options,config,version,help,start,restart,kill,status"
   local ARRAY="bindings"
-  # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
   # Generate Files
   [ -f "$RUN_SXHKD_CONFIG_DIR/$RUN_SXHKD_CONFIG_FILE" ] || __gen_config &>/dev/null
-  [ -f "$RUN_SXHKD_OPTIONS_DIR/options" ] || __list_options "$RUN_SXHKD_OPTIONS_DIR" &>/dev/null
-  [ -f "$RUN_SXHKD_OPTIONS_DIR/array" ] || __list_array "$RUN_SXHKD_OPTIONS_DIR" "$ARRAY" &>/dev/null
   [ -f "$RUN_SXHKD_LOG_FILE" ] || mkdir -p "$(dirname "$RUN_SXHKD_LOG_FILE")"
-  # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
   # Import config
   if [ -f "$RUN_SXHKD_CONFIG_DIR/$RUN_SXHKD_CONFIG_FILE" ]; then
     . "$RUN_SXHKD_CONFIG_DIR/$RUN_SXHKD_CONFIG_FILE"
   fi
-  # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+  # Setup notification function
   if [ "$RUN_SXHKD_NOTIFY_ENABLED" = "yes" ]; then
     __sxhkd_notifications() {
-      export NOTIFY_CLIENT_NAME="$RUN_SXHKD_NOTIFY_CLIENT_NAME"
-      export NOTIFY_CLIENT_ICON="$RUN_SXHKD_NOTIFY_CLIENT_ICON"
-      notifications "$RUN_SXHKD_NOTIFY_CLIENT_NAME" "$@" && exitCode=0 || exitCode=1
-      unset NOTIFY_CLIENT_NAME NOTIFY_CLIENT_ICON
-      return ${exitCode:-$?}
+      __notifications "$RUN_SXHKD_NOTIFY_CLIENT_NAME" "$@"
     }
   else
     __sxhkd_notifications() { false; }
   fi
-  # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-  # options
+
+  # Parse options
   local setopts
   setopts=$(getopt -o "$SHORTOPTS" --long "$LONGOPTS" -a -n "$PROG" -- "$@" 2>/dev/null)
   eval set -- "${setopts[@]}" 2>/dev/null
@@ -195,42 +261,41 @@ EOF
     case $1 in
     --options)
       shift 1
-      __list_array "$RUN_SXHKD_OPTIONS_DIR" "$ARRAY"
-      __list_options "$RUN_SXHKD_OPTIONS_DIR"
-      exit $?
+      echo "Options: $SHORTOPTS $LONGOPTS $ARRAY"
+      exit 0
       ;;
-    -v | --version)
+    -v|--version)
       shift 1
       __version
-      exit $?
+      exit 0
       ;;
-    -h | --help)
+    -h|--help)
       shift 1
       __help
-      exit $?
+      exit 0
       ;;
-    -c | --config)
+    -c|--config)
       shift 1
       __gen_config
       exit $?
       ;;
-    -s | --start)
+    -s|--start)
       shift 1
       SETOPTS="start"
       ;;
-    -r | --restart)
+    -r|--restart)
       shift 1
       SETOPTS="restart"
       ;;
-    -k | --kill)
+    -k|--kill)
       shift 1
       SETOPTS="kill"
       ;;
-    -b | --bindings)
+    -b|--bindings)
       shift 1
       SETOPTS="bindings"
       ;;
-    -p | --status)
+    -p|--status)
       shift 1
       SETOPTS="status"
       ;;
@@ -240,26 +305,27 @@ EOF
       ;;
     esac
   done
-  #set -- "$SETARGS"
-  # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-  # Actions based on env
 
-  # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-  # Check for required applications/Network check
-  cmd_exists --error bash sxhkd || exit 1
-  # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-  # APP Variables
+  # Check for required applications
+  if ! __cmd_exists sxhkd; then
+    __printf_red "Error: sxhkd is not installed"
+    exit 1
+  fi
 
-  # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   # begin main app
   case "${SETOPTS:-$1}" in
   bindings)
-    if [[ -n "$DISPLAY" ]] && [[ "$(uname -s)" = "Linux" ]] && cmd_exists rofi; then
-      cmd_exists sxhkd_help && sxhkd_help
+    if __has_display && [ "$(__get_os)" = "linux" ] && __cmd_exists rofi; then
+      __cmd_exists sxhkd_help && sxhkd_help
     elif [ -t 0 ]; then
-      grep " # " "$HOME/.config/sxhkd/KeyBindings.md" | less
+      grep " # " "$HOME/.config/sxhkd/KeyBindings.md" 2>/dev/null | less
     else
-      myterminal -e "less $HOME/.config/sxhkd/KeyBindings.md"
+      if __cmd_exists myterminal; then
+        myterminal -e "less $HOME/.config/sxhkd/KeyBindings.md"
+      else
+        echo "No terminal available to display bindings"
+        exit 1
+      fi
     fi
     ;;
 
@@ -292,15 +358,12 @@ EOF
     sxhkdcmd
     ;;
   esac
-  # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-  # lets exit with code
+
   return "${exitCode:-$?}"
 }
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# execute function
-run_sxhkd_main "$@"
+# Execute
+main "$@"
+exit $?
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# End application
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# lets exit with code
-exit "${exitCode:-$?}"
+# end

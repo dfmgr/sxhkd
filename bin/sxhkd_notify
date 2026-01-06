@@ -1,15 +1,6 @@
 #!/usr/bin/env bash
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-PROG="sxhkd_notify"
-USER="${SUDO_USER:-${USER}}"
-HOME="${USER_HOME:-${HOME}}"
-SRC_DIR="${BASH_SOURCE%/*}"
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-#set opts
-[[ -n "$DISPLAY" ]] && [ ! -t 0 ] && { [[ "$1" = *term ]] || [ $# = 0 ]; } && TERMINAL_APP="TRUE" eval ${TERMINAL:-myterminal} -e "${PROG:-bash} ${*:-}" && { exit || exit 1; }
-
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-##@Version       : 031520211934-git
+##@Version       : 202601061012-git
 # @Author        : Jason Hempstead
 # @Contact       : jason@casjaysdev.pro
 # @License       : WTFPL
@@ -17,62 +8,165 @@ SRC_DIR="${BASH_SOURCE%/*}"
 # @Copyright     : Copyright: (c) 2021 Jason Hempstead, CasjaysDev
 # @Created       : Monday, Mar 15, 2021 19:34 EDT
 # @File          : sxhkd_notify
-# @Description   : sxhkd notify script
+# @Description   : sxhkd notify script - monitors FIFO and sends notifications
+# @Changelog     : Refactored for self-contained operation
 # @TODO          :
 # @Other         :
 # @Resource      :
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Main function file
-if [ -f "$SRC_DIR/functions.bash" ]; then
-  FUNCTIONS_DIR="$SRC_DIR"
-  . "$FUNCTIONS_DIR/functions.bash"
-elif [ -f "$HOME/.local/bin/functions.bash" ]; then
-  FUNCTIONS_DIR="$HOME/.local/bin"
-  . "$FUNCTIONS_DIR/functions.bash"
-else
-  printf "\t\t\033[0;31m%s \033[0m\n" "Couldn't source the functions file from $FUNCTIONS_DIR"
-  return 1
-fi
+# Script variables
+PROG="sxhkd_notify"
+VERSION="202601061012-git"
+USER="${SUDO_USER:-${USER}}"
+HOME="${USER_HOME:-${HOME}}"
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# helper function
-__version() { app_version; }
+# Environment Detection
+__get_os() {
+  case "$(uname -s)" in
+    Linux*) echo "linux" ;;
+    Darwin*) echo "mac" ;;
+    *BSD*) echo "bsd" ;;
+    MINGW*|MSYS*|CYGWIN*) echo "windows" ;;
+    *) echo "unknown" ;;
+  esac
+}
+
+__is_remote() {
+  [ -n "${SSH_CLIENT:-}" ] || [ -n "${SSH_TTY:-}" ] || [ -n "${SSH_CONNECTION:-}" ]
+}
+
+__has_display() {
+  [ -n "${DISPLAY:-}" ] || [ -n "${WAYLAND_DISPLAY:-}" ]
+}
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Core helper functions
+__cmd_exists() { command -v "$1" >/dev/null 2>&1; }
+
+__is_running() {
+  local proc="$1"
+  case "$(__get_os)" in
+    mac) pgrep -x "$proc" >/dev/null 2>&1 ;;
+    windows) tasklist 2>/dev/null | grep -qi "$proc" ;;
+    *) pgrep -x "$proc" >/dev/null 2>&1 || pgrep -f "$proc" >/dev/null 2>&1 ;;
+  esac
+}
+
+__printf_color() {
+  local color="${2:-0}"
+  printf "\033[0;%sm%s\033[0m\n" "$color" "$1"
+}
+__printf_red() { __printf_color "$1" "31"; }
+__printf_green() { __printf_color "$1" "32"; }
+__printf_yellow() { __printf_color "$1" "33"; }
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Smart notifications
+__notifications() {
+  local title="$1" msg="$2"
+
+  # Remote/no display - just print to stderr
+  if __is_remote || ! __has_display; then
+    printf "[%s] %s\n" "$title" "$msg" >&2
+    return 0
+  fi
+
+  # GUI notifications based on OS
+  case "$(__get_os)" in
+    mac)
+      osascript -e "display notification \"$msg\" with title \"$title\"" 2>/dev/null && return 0
+      ;;
+    linux|bsd)
+      if __cmd_exists notify-send; then
+        notify-send "$title" "$msg" 2>/dev/null && return 0
+      fi
+      ;;
+    windows)
+      if __cmd_exists powershell.exe; then
+        powershell.exe -Command "Add-Type -AssemblyName System.Windows.Forms; [System.Windows.Forms.MessageBox]::Show('$msg', '$title')" 2>/dev/null && return 0
+      fi
+      ;;
+  esac
+
+  # Fallback
+  printf "[%s] %s\n" "$title" "$msg" >&2
+}
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Version and help
+__version() { echo "$PROG $VERSION"; }
+
 __help() {
-  app_help "Usage: sxhkd_notify  -  sxhkd_notify --version" \
-    "-v, --version               -  display version" \
-    "-h, --help                  -  display help"
+  cat <<EOF
+$PROG $VERSION - sxhkd notification script
+
+Usage: $PROG [options] [fifo_path]
+
+Options:
+  -v, --version    Show version
+  -h, --help       Show this help
+
+Arguments:
+  fifo_path        Path to sxhkd status FIFO (default: ~/.cache/sxhkd)
+
+Description:
+  Monitors the sxhkd status FIFO and sends desktop notifications
+  for keybindings as they are triggered.
+
+  Message types:
+    H* - Hotkey pressed (2 second notification)
+    C* - Command executed (4 second notification)
+    T* - Timeout (1 second notification)
+EOF
 }
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Main function
 main() {
-  # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-  # options
-  case $1 in
-  -v | --version) __version ;;
-  -h | --help) __help ;;
+  local exitCode=0
+
+  # Parse options
+  case "${1:-}" in
+    -v|--version) __version; exit 0 ;;
+    -h|--help) __help; exit 0 ;;
   esac
-  # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+  # Launch in terminal if needed
+  [[ -n "$DISPLAY" ]] && [ ! -t 0 ] && { [[ "$1" = *term ]] || [ $# = 0 ]; } && TERMINAL_APP="TRUE" eval ${TERMINAL:-myterminal} -e "${PROG:-bash} ${*:-}" && { exit || exit 1; }
+
   # Required app check
-  cmd_exists --error bash sxhkd || exit 1
-  # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-  # begin main app
-  pkill -USR1 -x sxhkd && cmd_exists notifications && notifications 'sxhkd' 'Reloaded config'
-  status_fifo="${1:-$HOME/.cache/sxhkd}"
-  [ -p "$status_fifo" ] || mkfifo "$status_fifo" &>/dev/null
-  { while read -r line; do
-    msg=${line#?}
+  if ! __cmd_exists sxhkd; then
+    __printf_red "Error: sxhkd is not installed"
+    exit 1
+  fi
+
+  # Reload sxhkd config
+  pkill -USR1 -x sxhkd && __notifications 'sxhkd' 'Reloaded config'
+
+  local status_fifo="${1:-$HOME/.cache/sxhkd}"
+
+  # Create FIFO if it doesn't exist
+  if [ ! -p "$status_fifo" ]; then
+    mkfifo "$status_fifo" &>/dev/null
+    if [ ! -p "$status_fifo" ]; then
+      __printf_red "Error: Failed to create FIFO at $status_fifo"
+      exit 1
+    fi
+  fi
+
+  # Read from FIFO and send notifications
+  while read -r line; do
+    local msg="${line#?}"
+    local duration=2
     case $line in
     H*) duration=2 ;;
     C*) duration=4 ;;
     T*) duration=1 ;;
     esac
-    notifications 'SXHKD' "$duration $msg"
-  done; } <"$status_fifo"
+    __notifications 'SXHKD' "$msg"
+  done <"$status_fifo"
+
   return "${exitCode:-$?}"
 }
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# execute function
+# Execute
 main "$@"
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 exit $?
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # end
